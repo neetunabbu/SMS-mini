@@ -194,6 +194,61 @@
             background-color: #c82333 !important;
         }
 
+        /* Search and filter container */
+        .search-filter-container {
+            max-width: 900px;
+            margin-left: 0;
+            margin-right: auto;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-filter-container input[type="text"],
+        .search-filter-container select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-filter-container input[type="text"] {
+            flex: 1;
+        }
+
+        .search-filter-container select {
+            width: 150px;
+        }
+
+        .search-filter-container input[type="text"]:focus,
+        .search-filter-container select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .search-filter-container .btn {
+            padding: 8px 16px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: scale(1.05);
+        }
+
         /* Pagination */
         .pagination-container {
             max-width: 900px;
@@ -202,26 +257,39 @@
             margin-top: 20px;
         }
 
-        .pagination .page-item .page-link {
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+        .pagination li a {
             color: #007bff;
             border: 1px solid #dee2e6;
             padding: 8px 12px;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
-        .pagination .page-item.active .page-link {
+        .pagination li.active a {
             background-color: #007bff;
             border-color: #007bff;
             color: #ffffff;
         }
 
-        .pagination .page-item.disabled .page-link {
+        .pagination li.disabled a {
             color: #6c757d;
             background-color: #f8f9fa;
             border-color: #dee2e6;
+            cursor: not-allowed;
         }
 
-        .pagination .page-item .page-link:hover {
+        .pagination li a:hover:not(.disabled a) {
             background-color: #e9ecef;
             border-color: #dee2e6;
         }
@@ -254,15 +322,44 @@
             .action-buttons {
                 gap: 6px;
             }
+            .search-filter-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .search-filter-container input[type="text"],
+            .search-filter-container select {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .search-filter-container .btn {
+                width: 100%;
+            }
         }
     </style>
 
     <h2>Users Management</h2>
 
+    <!-- Search and Filter Form -->
+    <div class="search-filter-container">
+        <form action="{{ route('admin.users.index') }}" method="GET" style="display: flex; gap: 10px; width: 100%;">
+            <input type="text" name="search" placeholder="Search by name, email, or role..." value="{{ request()->query('search') }}">
+            <select name="role">
+                <option value="all" {{ request()->query('role', 'all') === 'all' ? 'selected' : '' }}>All Roles</option>
+                <option value="admin" {{ request()->query('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="teacher" {{ request()->query('role') === 'teacher' ? 'selected' : '' }}>Teacher</option>
+                <option value="student" {{ request()->query('role') === 'student' ? 'selected' : '' }}>Student</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search</button>
+            @if(request()->query('search') || (request()->query('role') && request()->query('role') !== 'all'))
+                <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Clear</a>
+            @endif
+        </form>
+    </div>
+
     <div class="button-container">
         <div class="d-flex">
             <button id="bulkDeleteButton" class="btn btn-danger btn-custom" disabled onclick="showBulkDeleteModal()">
-                <i class="material-icons">delete</i> Bulk Delete
+                <i class="material-icons"></i> Bulk Delete
             </button>
         </div>
         <div class="d-flex justify-content-end">
@@ -290,7 +387,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($users as $index => $user)
+                @forelse($users as $index => $user)
                     <tr>
                         <td class="sno-column">
                             <div class="sno-checkbox-container">
@@ -312,14 +409,38 @@
                             </div>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center">No users found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
-    </div>
 
-    <div class="pagination-container">
-        <div class="d-flex justify-content-center">
-            {{ $users->links('pagination::bootstrap-5') }}
+        <div class="pagination-container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    @if ($users->onFirstPage())
+                        <li class="disabled"><a href="#">«</a></li>
+                    @else
+                        <li><a href="{{ $users->previousPageUrl() }}&search={{ urlencode(request()->get('search')) }}&role={{ urlencode(request()->get('role')) }}">«</a></li>
+                    @endif
+
+                    @foreach ($users->getUrlRange(1, $users->lastPage()) as $page => $url)
+                        @if ($page == $users->currentPage())
+                            <li class="active"><a href="#">{{ $page }}</a></li>
+                        @else
+                            <li><a href="{{ $url }}&search={{ urlencode(request()->get('search')) }}&role={{ urlencode(request()->get('role')) }}">{{ $page }}</a></li>
+                        @endif
+                    @endforeach
+
+                    @if ($users->hasMorePages())
+                        <li><a href="{{ $users->nextPageUrl() }}&search={{ urlencode(request()->get('search')) }}&role={{ urlencode(request()->get('role')) }}">»</a></li>
+                    @else
+                        <li class="disabled"><a href="#">»</a></li>
+                    @endif
+                </ul>
+            </nav>
         </div>
     </div>
 

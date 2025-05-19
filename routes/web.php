@@ -56,6 +56,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::resource('users', UserController::class);
     Route::post('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
     Route::resource('students', StudentController::class);
+    Route::post('students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulkDelete');
     Route::resource('teachers', TeacherController::class);
     Route::resource('attendances', AttendanceController::class);
     Route::resource('marks', MarkController::class);
@@ -94,7 +95,7 @@ Route::prefix('teacher')->middleware(['auth', 'is_teacher'])->name('teacher.')->
         Route::post('/', [TeacherDashboardController::class, 'storeMarks'])->name('store');
         Route::get('/{id}/edit', [TeacherDashboardController::class, 'editMarks'])->name('edit');
         Route::put('/{id}', [TeacherDashboardController::class, 'updateMarks'])->name('update');
-        Route::delete('/{id}', [TeacherDashboardController::class, 'destroyMarks'])->name('destroy');
+        Route::delete('/{id}', [TeacherDashboardController::class, 'destroyMarks'])->name('ustry');
     });
 
     // School Classes Management

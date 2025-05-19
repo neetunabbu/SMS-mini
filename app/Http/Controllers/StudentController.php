@@ -10,11 +10,15 @@ use Illuminate\Http\Request;
 class StudentController extends Controller
 {
     // List all students
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::with(['teacher', 'schoolClass'])
-            ->latest()
-            ->get();
+        $query = Student::with(['teacher', 'schoolClass'])->latest();
+
+        // Paginate the results and preserve query parameters
+        $students = $query->paginate(10)->appends([
+            'search' => $request->input('search'),
+            'role' => $request->input('role'),
+        ]);
 
         return view('admin.students.index', compact('students'));
     }

@@ -10,9 +10,31 @@ use Illuminate\Support\Facades\Hash;
 class UserController extends Controller
 {
     // Show all users (Admin dashboard)
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::paginate(10); // Paginate 10 users per page
+        $query = User::query();
+
+        // Apply search filter if present
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('role', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        // Apply role filter if present
+        if ($request->filled('role') && $request->input('role') !== 'all') {
+            $query->where('role', $request->input('role'));
+        }
+
+        // Paginate the results and preserve query parameters
+        $users = $query->paginate(10)->appends([
+            'search' => $request->input('search'),
+            'role' => $request->input('role'),
+        ]);
+
         return view('admin.users.index', compact('users'));
     }
 
