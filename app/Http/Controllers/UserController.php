@@ -74,6 +74,23 @@ class UserController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'User deleted successfully.');
     }
 
+    // Bulk delete users
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!empty($ids)) {
+            // Check if the authenticated user's ID is in the list
+            if (in_array(Auth::id(), $ids)) {
+                return response()->json(['success' => false, 'message' => 'You cannot delete your own account.'], 400);
+            }
+
+            // Delete users that are not the authenticated user
+            User::whereIn('id', $ids)->delete();
+            return response()->json(['success' => true, 'message' => 'Selected users deleted successfully.']);
+        }
+        return response()->json(['success' => false, 'message' => 'No users selected.'], 400);
+    }
+
     // ========== Profile Methods ==========
 
     /**

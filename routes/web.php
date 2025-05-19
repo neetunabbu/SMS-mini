@@ -33,7 +33,6 @@ Route::get('/dashboard-redirect', function () {
     };
 })->middleware('auth')->name('dashboard.redirect');
 
-
 // ========================= AUTHENTICATION ROUTES =========================
 // Login & Logout
 Route::middleware('guest')->group(function () {
@@ -55,6 +54,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
 
     // Resource Controllers
     Route::resource('users', UserController::class);
+    Route::post('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
     Route::resource('students', StudentController::class);
     Route::resource('teachers', TeacherController::class);
     Route::resource('attendances', AttendanceController::class);
@@ -62,7 +62,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::resource('leaves', LeaveController::class);
     Route::resource('school_classes', SchoolClassController::class);
 
-      // Profile Management
+    // Profile Management
     Route::get('/profile', [UserController::class, 'showProfile'])->name('profile.show');
     Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
@@ -70,7 +70,6 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     // Password Management
     Route::get('/password/edit', [UserController::class, 'editPassword'])->name('password.edit');
     Route::put('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
-
 });
 
 // ========================= TEACHER ROUTES =========================
@@ -116,48 +115,38 @@ Route::prefix('teacher')->middleware(['auth', 'is_teacher'])->name('teacher.')->
         Route::put('/{id}', [TeacherDashboardController::class, 'updateLeaveApproval'])->name('update');
     });
 
-     // Profile Management
-     Route::get('/profile', [TeacherDashboardController::class, 'showProfile'])->name('profile.show');
-     Route::get('/profile/edit', [TeacherDashboardController::class, 'editProfile'])->name('profile.edit');
-     Route::put('/profile', [TeacherDashboardController::class, 'updateProfile'])->name('profile.update');
- 
-     // Password Management
-     Route::get('/profile/password', [TeacherDashboardController::class, 'editPassword'])->name('profile.password');
-     Route::put('/profile/password', [TeacherDashboardController::class, 'updatePassword'])->name('profile.password.update');
- });
+    // Profile Management
+    Route::get('/profile', [TeacherDashboardController::class, 'showProfile'])->name('profile.show');
+    Route::get('/profile/edit', [TeacherDashboardController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [TeacherDashboardController::class, 'updateProfile'])->name('profile.update');
 
+    // Password Management
+    Route::get('/profile/password', [TeacherDashboardController::class, 'editPassword'])->name('profile.password');
+    Route::put('/profile/password', [TeacherDashboardController::class, 'updatePassword'])->name('profile.password.update');
+});
 
+// ========================= STUDENT ROUTES =========================
+Route::prefix('student')->middleware(['auth', 'is_student'])->name('student.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
 
- // ========================= STUDENT ROUTES =========================
- Route::prefix('student')->middleware(['auth', 'is_student'])->name('student.')->group(function () {
- 
-     // Dashboard
-     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
- 
-     // Attendance View
-     Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('attendance');
- 
-     // Marks View
-     Route::get('/marks', [StudentDashboardController::class, 'marks'])->name('marks');
- 
-    //  Route::get('/student/leaveApproval', [StudentDashboardController::class, 'leaveRequest'])->name('student.leaveApproval');
-    
-    Route::get('/student/leave-approval', [StudentDashboardController::class, 'leaveRequest'])->name('student.leaveApproval');
-    //  Route::post('/submit-leave', [StudentDashboardController::class, 'submitLeave'])->name('student.submitLeave');
-    // Route for the student leave form
-    Route::get('/student/leave-form', [StudentDashboardController::class, 'showLeaveForm'])->name('student.leaveForm');
-    Route::get('/student/leaveForm', [StudentDashboardController::class, 'leaveForm'])->name('student.leaveForm');
+    // Attendance View
+    Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('attendance');
 
+    // Marks View
+    Route::get('/marks', [StudentDashboardController::class, 'marks'])->name('marks');
 
-     //  Route::post('/student/submitLeave', [StudentDashboardController::class, 'submitLeave'])->name('student.submitLeave');
- 
-     // Profile View & Edit
-     Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
-     Route::get('/profile/edit', [StudentDashboardController::class, 'editProfile'])->name('profile.edit');
-     Route::post('/profile/update', [StudentDashboardController::class, 'updateProfile'])->name('profile.update');
- 
-     // Password Change (Optional)
-     Route::get('/profile/password', [StudentDashboardController::class, 'editPassword'])->name('profile.password');
-     Route::post('/profile/password/update', [StudentDashboardController::class, 'updatePassword'])->name('profile.password.update');
- });
- 
+    // Leave Requests
+    Route::get('/leave-approval', [StudentDashboardController::class, 'leaveRequest'])->name('leaveApproval');
+    Route::get('/leave-form', [StudentDashboardController::class, 'showLeaveForm'])->name('leaveForm');
+    Route::get('/leaveForm', [StudentDashboardController::class, 'leaveForm'])->name('leaveForm');
+
+    // Profile View & Edit
+    Route::get('/profile', [StudentDashboardController::class, 'profile'])->name('profile');
+    Route::get('/profile/edit', [StudentDashboardController::class, 'editProfile'])->name('profile.edit');
+    Route::post('/profile/update', [StudentDashboardController::class, 'updateProfile'])->name('profile.update');
+
+    // Password Change
+    Route::get('/profile/password', [StudentDashboardController::class, 'editPassword'])->name('profile.password');
+    Route::post('/profile/password/update', [StudentDashboardController::class, 'updatePassword'])->name('profile.password.update');
+});
